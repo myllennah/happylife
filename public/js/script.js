@@ -24,7 +24,3 @@ document.getElementById("cep").addEventListener("blur", async () => {
     resultadoDiv.innerHTML = `<p>Por favor, insira um CEP válido.</p>`;
   }
 });
-
-// document.getElementById('reset').addEventListener('click', function() {
-//         document.getElementById('formCadastro').reset();
-//     });

@@ -30,7 +30,7 @@
         <td><%-clientes[i].whatsapp %></td>
         <td>CEP: <%-clientes[i].cep %><br><%-clientes[i].logradouro %><br><%-clientes[i].bairro %><br><%-clientes[i].complemento %><br><%-clientes[i].cidade %><br><%-clientes[i].estado %></td>
         <td>
-          <a href="/alterarcadastro?codcliente= <%- clientes[i].codcliente %>">Alterar</a>
+          <a href="/detalhescliente?codcliente= <%- clientes[i].codcliente %>">Alterar</a>
         </td>
       </tr>
       <% } %> <% } else { %>

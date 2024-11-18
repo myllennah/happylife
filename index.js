@@ -59,19 +59,18 @@ app.get('/listadeclientes', function(req, res) {
     if (error) {
       console.log('Erro na consulta:', error);
     }
-    console.log('Dados retornados:', result);
     res.render('listadeclientes', { clientes: result });
   });
 });
 
 // rotas alterar/excluir cadastro
-app.get('/alterarcadastro', function(req, res){
+app.get('/detalhescliente', function(req, res){
   var sql = "select * from clientes where codcliente=?";
   var codcliente = req.query.codcliente;
 
   conexao.query(sql, [codcliente], function(error, result){
       if (result && result.length > 0) {
-          res.render('alterarcadastro', {clientes : result[0]});
+          res.render('detalhescliente', {clientes : result[0]});
       } else{
           res.status(404).send('Cliente não encontrado');
           console.log(error)
@@ -79,7 +78,31 @@ app.get('/alterarcadastro', function(req, res){
   });
 });
 
+app.post('/update-clientes', function(req, res) {
+  var sqlUpdate = "UPDATE clientes SET nome=?, sobrenome=?, email=?, whatsapp=?, cep=?, logradouro=?, bairro=?, cidade=?, estado=? WHERE codcliente=?";
+  var { codcliente, nome, sobrenome, email, whatsapp, cep, logradouro, bairro, cidade, estado } = req.body;
 
+  conexao.query(sqlUpdate, [nome, sobrenome, email, whatsapp, cep, logradouro, bairro, cidade, estado, codcliente], function(error, result) {
+    if (error) {
+      console.log('Erro na atualização:', error);
+      return res.status(500).send('Erro no servidor');
+    }
+    res.redirect('listadeclientes');
+  });
+});
+
+app.post('/delete-clientes', function(req, res) {
+  var sqlDelete = "DELETE FROM clientes WHERE codcliente = ?";
+  var codcliente = req.body.codcliente;
+
+  conexao.query(sqlDelete, [codcliente], function(error, result) {
+    if (error) {
+      console.log('Erro ao deletar:', error);
+      return res.status(500).send('Erro no servidor');
+    }
+    res.redirect('/listadeclientes');
+  });
+});
 
 const PORT = process.env.PORT || 3003;
 app.listen(PORT, () => {
