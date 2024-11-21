@@ -1,17 +1,14 @@
 // importação de módulos
 var conexao = require("./conexaobanco");
-
 var express = require("express");
-
 var app = express();
-
 var bodyParser = require("body-parser");
 
 app.use(bodyParser.json()); //pega o que foi digitado transforma os dados em html (objeto)
-
 app.use(bodyParser.urlencoded({ extended: true })); //aprova, dá o ok
-
 app.set("view engine", "ejs");
+app.use(express.json());  // Para requisições com body JSON
+app.use(express.urlencoded({ extended: true }));  // Para requisições URL-encoded
 
 // conexão com public e views
 app.use(express.static("public"));
@@ -32,6 +29,8 @@ app.post("/", (req, res) => {
     whatsapp,
     cep,
     logradouro,
+    numero,
+    complemento,
     bairro,
     cidade,
     estado,
@@ -39,15 +38,15 @@ app.post("/", (req, res) => {
 
   //prevenindo SQL injection
   var sql =
-    "INSERT INTO clientes(nome, sobrenome, email, whatsapp, cep, logradouro, bairro, cidade, estado) VALUES (?,?,?,?,?,?,?,?,?)";
+    "INSERT INTO clientes(nome, sobrenome, email, whatsapp, cep, logradouro, numero, complemento, bairro, cidade, estado) VALUES (?,?,?,?,?,?,?,?,?,?,?)";
 
   conexao.query(
     sql,
-    [nome, sobrenome, email, whatsapp, cep, logradouro, bairro, cidade, estado],
+    [nome, sobrenome, email, whatsapp, cep, logradouro, numero, complemento, bairro, cidade, estado],
     function (error, result) {
       if (error) throw error;
       //res.send("Estudante cadastrado com sucesso! " +result.insertId);
-      res.redirect("/");
+      res.redirect("/listadeclientes");
     }
   );
 });
@@ -64,33 +63,46 @@ app.get('/listadeclientes', function(req, res) {
 });
 
 // rotas alterar/excluir cadastro
-app.get('/detalhescliente', function(req, res){
-  var sql = "select * from clientes where codcliente=?";
+app.get('/detalhescliente', function(req, res) {
+  var sql = "SELECT * FROM clientes WHERE codcliente=?";
   var codcliente = req.query.codcliente;
 
-  conexao.query(sql, [codcliente], function(error, result){
-      if (result && result.length > 0) {
-          res.render('detalhescliente', {clientes : result[0]});
-      } else{
-          res.status(404).send('Cliente não encontrado');
-          console.log(error)
-      }
+  conexao.query(sql, [codcliente], function(error, result) {
+    if (result && result.length > 0) {
+      res.render('detalhescliente', { clientes: result[0] });
+    } else {
+      res.status(404).send('Cliente não encontrado');
+    }
   });
 });
 
 app.post('/update-clientes', function(req, res) {
-  var sqlUpdate = "UPDATE clientes SET nome=?, sobrenome=?, email=?, whatsapp=?, cep=?, logradouro=?, bairro=?, cidade=?, estado=? WHERE codcliente=?";
-  var { codcliente, nome, sobrenome, email, whatsapp, cep, logradouro, bairro, cidade, estado } = req.body;
+  console.log('Dados recebidos para atualização:', req.body);
+  var { nome, sobrenome, email, whatsapp, cep, logradouro, numero, complemento, bairro, cidade, estado, codcliente } = req.body;
+  console.log('codcliente:', codcliente);
 
-  conexao.query(sqlUpdate, [nome, sobrenome, email, whatsapp, cep, logradouro, bairro, cidade, estado, codcliente], function(error, result) {
+  // Verificar se o codcliente existe
+  conexao.query('SELECT * FROM clientes WHERE codcliente = ?', [codcliente], function(error, results) {
     if (error) {
-      console.log('Erro na atualização:', error);
+      console.log('Erro na consulta:', error);
       return res.status(500).send('Erro no servidor');
     }
-    res.redirect('listadeclientes');
+    if (results.length === 0) {
+      return res.status(404).send('Cliente não encontrado');
+    }
+
+    // Executar a atualização
+    var sqlUpdate = "UPDATE clientes SET nome=?, sobrenome=?, email=?, whatsapp=?, cep=?, logradouro=?, numero=?, complemento=?, bairro=?, cidade=?, estado=? WHERE codcliente=?";
+    conexao.query(sqlUpdate, [nome, sobrenome, email, whatsapp, cep, logradouro, numero, complemento, bairro, cidade, estado, codcliente], function(error, result) {
+      if (error) {
+        console.log('Erro na atualização:', error);
+        return res.status(500).send('Erro no servidor');
+      }
+      console.log('Atualização bem-sucedida:', result);
+      res.redirect('/listadeclientes');
+    });
   });
 });
-
 app.post('/delete-clientes', function(req, res) {
   var sqlDelete = "DELETE FROM clientes WHERE codcliente = ?";
   var codcliente = req.body.codcliente;

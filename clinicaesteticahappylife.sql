@@ -13,3 +13,6 @@ CREATE TABLE clientes(
     cidade VARCHAR(30) NOT NULL,
     estado VARCHAR(30) NOT NULL
 );
+
+ALTER TABLE clientes
+ADD COLUMN numero VARCHAR(30);
